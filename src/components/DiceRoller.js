@@ -1,4 +1,4 @@
-import dice from '../utils/Dice.js';
+import { RollDice } from '../utils/Dice.js';
 
 export default class DiceRoller {
   constructor(container) {
