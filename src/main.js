@@ -1,4 +1,4 @@
-import BattleMap from './components/BattleMap.js';
+import BattleMap from '/BattleMap.js';
 import CharacterSheet from './components/CharacterSheet.js';
 import DiceRoller from './components/DiceRoller.js';
 import InitiativeTracker from './components/InitiativeTracker.js';
