@@ -1,4 +1,3 @@
-import './styles.css'; // Remove this line if it exists
 import BattleMap from './components/BattleMap.js';
 import CharacterSheet from './components/CharacterSheet.js';
 import DiceRoller from './components/DiceRoller.js';
