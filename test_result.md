@@ -101,3 +101,270 @@
 #====================================================================================================
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
+
+user_problem_statement: "Comprehensive testing of Battle Map application including core canvas features, token system, game master tools, advanced features, and UI/UX testing"
+
+frontend:
+  - task: "Core Canvas Pan and Zoom Functionality"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/components/CanvasLayers.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+        - agent: "testing"
+        - comment: "Initial assessment - needs testing for pan/zoom functionality via mouse interactions and wheel events"
+
+  - task: "Grid Toggle and Grid Size Slider"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/components/BattleMap.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+        - agent: "testing"
+        - comment: "Initial assessment - needs testing for grid visibility toggle and size adjustment slider"
+
+  - task: "Tool Selection (Pan, Ruler, Fog Brush, Add Token)"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/components/BattleMap.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+        - agent: "testing"
+        - comment: "Initial assessment - needs testing for tool selection buttons and their functionality"
+
+  - task: "Background Map Upload Functionality"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/components/BattleMap.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+        - agent: "testing"
+        - comment: "Initial assessment - needs testing for file upload and background image display"
+
+  - task: "Token Creation with Different Shapes and Colors"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/components/TokenPanel.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+        - agent: "testing"
+        - comment: "Initial assessment - needs testing for token creation form with shape/color options"
+
+  - task: "Token Selection and Movement"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/components/CanvasLayers.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+        - agent: "testing"
+        - comment: "Initial assessment - needs testing for token click selection and drag movement"
+
+  - task: "Token Panel Opening and Closing"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/components/BattleMap.jsx"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+        - agent: "testing"
+        - comment: "Initial assessment - needs testing for token panel toggle functionality"
+
+  - task: "Token Deletion and Editing"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/components/TokenPanel.jsx"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+        - agent: "testing"
+        - comment: "Initial assessment - needs testing for token delete and edit buttons"
+
+  - task: "Dice Roller with Different Dice Types"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/components/DiceRoller.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+        - agent: "testing"
+        - comment: "Initial assessment - needs testing for d4, d6, d8, d10, d12, d20, d100 dice rolling"
+
+  - task: "Advantage/Disadvantage Rolling"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/components/DiceRoller.jsx"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+        - agent: "testing"
+        - comment: "Initial assessment - needs testing for advantage/disadvantage toggle switches and rolling mechanics"
+
+  - task: "Custom Dice Formulas"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/components/DiceRoller.jsx"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+        - agent: "testing"
+        - comment: "Initial assessment - needs testing for custom dice formula input and parsing"
+
+  - task: "Chat System with Message History"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/components/ChatPanel.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+        - agent: "testing"
+        - comment: "Initial assessment - needs testing for chat message sending, display, and history"
+
+  - task: "Initiative Tracker with Combatant Management"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/components/InitiativeTracker.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+        - agent: "testing"
+        - comment: "Initial assessment - needs testing for adding combatants, initiative rolling, and turn management"
+
+  - task: "Fog of War Toggle and Reveal Functionality"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/components/CanvasLayers.jsx"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+        - agent: "testing"
+        - comment: "Initial assessment - needs testing for fog of war toggle and brush reveal functionality"
+
+  - task: "Save/Load Scenario Functionality"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/store/battleMapStore.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+        - agent: "testing"
+        - comment: "Initial assessment - needs testing for scenario save/load and new scenario creation"
+
+  - task: "Character Sheet Panels"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/components/CharacterSheet.jsx"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+        - agent: "testing"
+        - comment: "Initial assessment - needs testing for character sheet opening, tabs, and data management"
+
+  - task: "Submap Functionality"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/components/SubmapModal.jsx"
+    stuck_count: 0
+    priority: "low"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+        - agent: "testing"
+        - comment: "Initial assessment - needs testing for submap creation, editing, and management"
+
+  - task: "Panel Opening and Closing"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/components/BattleMap.jsx"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+        - agent: "testing"
+        - comment: "Initial assessment - needs testing for all panel toggle functionality"
+
+  - task: "Dark Theme Consistency"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/components/BattleMap.jsx"
+    stuck_count: 0
+    priority: "low"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+        - agent: "testing"
+        - comment: "Initial assessment - needs testing for consistent dark theme across all components"
+
+  - task: "Responsive Behavior"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/components/BattleMap.jsx"
+    stuck_count: 0
+    priority: "low"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+        - agent: "testing"
+        - comment: "Initial assessment - needs testing for responsive behavior on different screen sizes"
+
+metadata:
+  created_by: "testing_agent"
+  version: "1.0"
+  test_sequence: 1
+
+test_plan:
+  current_focus:
+    - "Core Canvas Pan and Zoom Functionality"
+    - "Grid Toggle and Grid Size Slider"
+    - "Tool Selection (Pan, Ruler, Fog Brush, Add Token)"
+    - "Background Map Upload Functionality"
+    - "Token Creation with Different Shapes and Colors"
+    - "Token Selection and Movement"
+    - "Dice Roller with Different Dice Types"
+    - "Chat System with Message History"
+    - "Initiative Tracker with Combatant Management"
+  stuck_tasks: []
+  test_all: true
+  test_priority: "high_first"
+
+agent_communication:
+    - agent: "testing"
+    - message: "Starting comprehensive testing of Battle Map application. Will test all core features systematically, focusing on high-priority items first. Application uses React 19, Zustand state management, and shadcn/ui components."
