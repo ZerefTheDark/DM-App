@@ -10,6 +10,3 @@ export function saveState(state) {
   };
   localStorage.setItem(KEY, JSON.stringify(data));
 }
-
-export async function loadState(state) {
-  const raw =
