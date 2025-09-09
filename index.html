@@ -1,0 +1,1260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The War Vault - Battle Map & Campaign Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1a1a1a;
+            color: #fff;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .app-container {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            grid-template-rows: 60px 1fr 80px;
+            height: 100vh;
+            grid-template-areas:
+                "sidebar toolbar"
+                "sidebar canvas"
+                "sidebar chat";
+        }
+
+        /* Mobile Layout */
+        @media (max-width: 768px) {
+            .app-container {
+                grid-template-columns: 1fr;
+                grid-template-rows: 50px 60px 1fr 70px;
+                grid-template-areas:
+                    "toolbar"
+                    "sidebar"
+                    "canvas"
+                    "chat";
+            }
+
+            .sidebar {
+                max-height: 120px;
+                overflow-y: auto;
+            }
+
+            .party-member {
+                flex-direction: row !important;
+                padding: 8px !important;
+            }
+
+            .party-member img {
+                width: 40px !important;
+                height: 40px !important;
+                margin-right: 10px !important;
+                margin-bottom: 0 !important;
+            }
+        }
+
+        /* Toolbar */
+        .toolbar {
+            grid-area: toolbar;
+            background: #2d2d2d;
+            border-bottom: 2px solid #444;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            gap: 15px;
+            overflow-x: auto;
+        }
+
+        .toolbar button {
+            background: #444;
+            border: none;
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            min-width: 80px;
+        }
+
+        .toolbar button:hover {
+            background: #555;
+        }
+
+        .toolbar button.active {
+            background: #007acc;
+        }
+
+        .view-toggle {
+            background: #4a90e2 !important;
+            font-weight: bold;
+        }
+
+        .view-toggle.player-mode {
+            background: #27ae60 !important;
+        }
+
+        /* Sidebar (Party Tracker) */
+        .sidebar {
+            grid-area: sidebar;
+            background: #2d2d2d;
+            border-right: 2px solid #444;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .sidebar h2 {
+            margin-bottom: 20px;
+            color: #4a90e2;
+            text-align: center;
+            font-size: 1.2em;
+        }
+
+        .party-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .party-member {
+            background: #3a3a3a;
+            border-radius: 8px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            position: relative;
+        }
+
+        .party-member:hover {
+            background: #4a4a4a;
+            transform: translateY(-2px);
+        }
+
+        .party-member.current-turn {
+            background: #e74c3c;
+            box-shadow: 0 0 20px rgba(231, 76, 60, 0.5);
+        }
+
+        .party-member.enemy {
+            background: #8e44ad;
+            border: 2px solid #9b59b6;
+        }
+
+        .party-member img {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            margin-bottom: 8px;
+            background: #555;
+            object-fit: cover;
+        }
+
+        .party-member .name {
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+
+        .party-member .initiative {
+            font-size: 0.9em;
+            color: #bbb;
+        }
+
+        .initiative-controls {
+            margin-top: 20px;
+            display: none;
+        }
+
+        .initiative-controls.active {
+            display: block;
+        }
+
+        .initiative-controls button {
+            width: 100%;
+            margin-bottom: 10px;
+            background: #e74c3c;
+            border: none;
+            color: white;
+            padding: 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .initiative-controls button:hover {
+            background: #c0392b;
+        }
+
+        .add-enemy-form {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .add-enemy-form input {
+            background: #444;
+            border: 1px solid #666;
+            color: white;
+            padding: 8px;
+            border-radius: 4px;
+        }
+
+        .add-enemy-form button {
+            background: #27ae60;
+            padding: 8px;
+        }
+
+        .add-enemy-form button:hover {
+            background: #229954;
+        }
+
+        /* Canvas */
+        .canvas-container {
+            grid-area: canvas;
+            position: relative;
+            overflow: hidden;
+            background: #1a1a1a;
+        }
+
+        .map-canvas {
+            width: 100%;
+            height: 100%;
+            background: #2a2a2a;
+            position: relative;
+            overflow: hidden;
+            cursor: crosshair;
+        }
+
+        .map-grid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+        }
+
+        .token {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid #fff;
+            cursor: move;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 12px;
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+            transition: all 0.2s;
+        }
+
+        .token:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(255,255,255,0.5);
+        }
+
+        .token.pc {
+            background: #4a90e2;
+            border-color: #357abd;
+        }
+
+        .token.npc {
+            background: #f39c12;
+            border-color: #d68910;
+        }
+
+        .token.enemy {
+            background: #e74c3c;
+            border-color: #c0392b;
+        }
+
+        .token.selected {
+            box-shadow: 0 0 20px #fff;
+        }
+
+        .fog-overlay {
+            position: absolute;
+            background: rgba(0,0,0,0.8);
+            pointer-events: none;
+            border-radius: 4px;
+        }
+
+        /* Chat */
+        .chat-container {
+            grid-area: chat;
+            background: #2d2d2d;
+            border-top: 2px solid #444;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 10px;
+            overflow-y: auto;
+            font-size: 14px;
+        }
+
+        .chat-input {
+            display: flex;
+            padding: 10px;
+            gap: 10px;
+            border-top: 1px solid #444;
+        }
+
+        .chat-input input {
+            flex: 1;
+            background: #444;
+            border: 1px solid #666;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+        }
+
+        .chat-input button {
+            background: #4a90e2;
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .dice-buttons {
+            display: flex;
+            gap: 5px;
+        }
+
+        .dice-buttons button {
+            background: #27ae60;
+            border: none;
+            color: white;
+            padding: 6px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .chat-message {
+            margin-bottom: 8px;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        .chat-message.system {
+            background: rgba(116, 185, 255, 0.1);
+            color: #74b9ff;
+        }
+
+        .chat-message.dice {
+            background: rgba(46, 204, 113, 0.1);
+            color: #2ecc71;
+            font-weight: bold;
+        }
+
+        /* Right Sidebar (Character Sheets) */
+        .character-sheet {
+            position: fixed;
+            top: 0;
+            right: -400px;
+            width: 400px;
+            height: 100vh;
+            background: #2d2d2d;
+            border-left: 2px solid #444;
+            transition: right 0.3s ease;
+            padding: 20px;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+
+        .character-sheet.active {
+            right: 0;
+        }
+
+        .character-sheet h3 {
+            color: #4a90e2;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .close-sheet {
+            background: #e74c3c;
+            border: none;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-item {
+            background: #3a3a3a;
+            padding: 12px;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .stat-item .label {
+            font-size: 12px;
+            color: #bbb;
+            margin-bottom: 5px;
+        }
+
+        .stat-item .value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        /* Modals */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: #2d2d2d;
+            border-radius: 8px;
+            padding: 20px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal h3 {
+            color: #4a90e2;
+            margin-bottom: 15px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .modal-buttons button {
+            flex: 1;
+            background: #4a90e2;
+            border: none;
+            color: white;
+            padding: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .modal-buttons button.secondary {
+            background: #666;
+        }
+
+        /* Player Mode Restrictions */
+        .player-mode .toolbar button:not(.view-toggle):not(.dice-roll) {
+            display: none;
+        }
+
+        .player-mode .initiative-controls {
+            display: none !important;
+        }
+
+        .player-mode .enemy {
+            display: none;
+        }
+
+        /* Loading Screen */
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #1a1a1a, #2d2d2d);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 3000;
+            transition: opacity 0.5s ease;
+        }
+
+        .loading-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .logo {
+            font-size: 3em;
+            font-weight: bold;
+            color: #4a90e2;
+            margin-bottom: 20px;
+            text-shadow: 0 0 20px rgba(74, 144, 226, 0.3);
+        }
+
+        .loading-text {
+            font-size: 1.2em;
+            color: #bbb;
+            margin-bottom: 30px;
+        }
+
+        .loading-bar {
+            width: 300px;
+            height: 4px;
+            background: #444;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .loading-progress {
+            height: 100%;
+            background: linear-gradient(90deg, #4a90e2, #74b9ff);
+            width: 0%;
+            animation: loading 2s ease-in-out forwards;
+        }
+
+        @keyframes loading {
+            to { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div class="loading-screen" id="loadingScreen">
+        <div class="logo">🏰 THE WAR VAULT</div>
+        <div class="loading-text">Initializing Campaign Manager...</div>
+        <div class="loading-bar">
+            <div class="loading-progress"></div>
+        </div>
+    </div>
+
+    <div class="app-container" id="appContainer">
+        <!-- Toolbar -->
+        <div class="toolbar">
+            <button class="view-toggle" id="viewToggle">DM View</button>
+            <button id="panTool" class="active">Pan</button>
+            <button id="rulerTool">Ruler</button>
+            <button id="coneTool">Cone</button>
+            <button id="circleTool">Circle</button>
+            <button id="fogTool">Fog</button>
+            <button id="portalTool">Portal</button>
+            <button id="addTokens">Add Tokens</button>
+            <button id="saveMap">Save</button>
+            <button id="loadMap">Load</button>
+            <button id="newMap">New Map</button>
+        </div>
+
+        <!-- Sidebar (Party Tracker) -->
+        <div class="sidebar">
+            <h2>Party Tracker</h2>
+            <div class="party-list" id="partyList">
+                <!-- Party members will be added here -->
+            </div>
+            
+            <div class="initiative-controls" id="initiativeControls">
+                <button id="startInitiative">Start Initiative</button>
+                <button id="endInitiative">End Initiative</button>
+                <button id="nextTurn">Next Turn</button>
+                <div class="add-enemy-form" id="addEnemyForm" style="display: none;">
+                    <input type="text" id="enemyName" placeholder="Enemy name">
+                    <input type="number" id="enemyInitiative" placeholder="Initiative" min="1" max="30">
+                    <button id="addEnemy">Add Enemy</button>
+                </div>
+                <button id="showAddEnemy">Add Enemy</button>
+            </div>
+        </div>
+
+        <!-- Main Canvas -->
+        <div class="canvas-container">
+            <div class="map-canvas" id="mapCanvas">
+                <div class="map-grid"></div>
+                <!-- Tokens and overlays will be added here -->
+            </div>
+        </div>
+
+        <!-- Chat -->
+        <div class="chat-container">
+            <div class="chat-messages" id="chatMessages">
+                <div class="chat-message system">Welcome to The War Vault! Begin your campaign.</div>
+            </div>
+            <div class="chat-input">
+                <input type="text" id="chatInput" placeholder="Type your message...">
+                <button id="sendChat">Send</button>
+                <div class="dice-buttons">
+                    <button onclick="rollDice('1d20')">d20</button>
+                    <button onclick="rollDice('1d12')">d12</button>
+                    <button onclick="rollDice('1d10')">d10</button>
+                    <button onclick="rollDice('1d8')">d8</button>
+                    <button onclick="rollDice('1d6')">d6</button>
+                    <button onclick="rollDice('1d4')">d4</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Character Sheet Sidebar -->
+    <div class="character-sheet" id="characterSheet">
+        <h3>
+            <span id="characterName">Character Sheet</span>
+            <button class="close-sheet" id="closeSheet">×</button>
+        </h3>
+        <div id="characterContent">
+            <!-- Character details will be loaded here -->
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div class="modal-overlay" id="addTokenModal">
+        <div class="modal">
+            <h3>Add Token</h3>
+            <div>
+                <label>Name:</label>
+                <input type="text" id="tokenName" placeholder="Character name">
+            </div>
+            <div style="margin-top: 10px;">
+                <label>Type:</label>
+                <select id="tokenType">
+                    <option value="pc">Player Character</option>
+                    <option value="npc">NPC</option>
+                    <option value="enemy">Enemy</option>
+                </select>
+            </div>
+            <div class="modal-buttons">
+                <button id="confirmAddToken">Add Token</button>
+                <button class="secondary" id="cancelAddToken">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global State
+        let gameState = {
+            isPlayerMode: false,
+            currentTool: 'pan',
+            tokens: [],
+            party: [
+                { id: 1, name: 'Thorin', type: 'pc', initiative: 0, avatar: '', hp: 100, ac: 18 },
+                { id: 2, name: 'Elara', type: 'pc', initiative: 0, avatar: '', hp: 85, ac: 16 },
+                { id: 3, name: 'Gandrick', type: 'pc', initiative: 0, avatar: '', hp: 70, ac: 14 },
+                { id: 4, name: 'Zara', type: 'pc', initiative: 0, avatar: '', hp: 95, ac: 17 }
+            ],
+            enemies: [],
+            inCombat: false,
+            currentTurn: 0,
+            selectedToken: null,
+            mapCanvas: null,
+            isDragging: false,
+            dragOffset: { x: 0, y: 0 }
+        };
+
+        // Initialize App
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                document.getElementById('loadingScreen').classList.add('hidden');
+                initializeApp();
+            }, 2000);
+        });
+
+        function initializeApp() {
+            gameState.mapCanvas = document.getElementById('mapCanvas');
+            setupEventListeners();
+            renderPartyList();
+            addMessage('System', 'The War Vault initialized. Ready for adventure!', 'system');
+            
+            // Add sample tokens
+            addToken(200, 200, 'Thorin', 'pc');
+            addToken(240, 200, 'Elara', 'pc');
+            addToken(280, 200, 'Gandrick', 'pc');
+            addToken(320, 200, 'Zara', 'pc');
+        }
+
+        function setupEventListeners() {
+            // View Toggle
+            document.getElementById('viewToggle').addEventListener('click', toggleView);
+            
+            // Tools
+            document.getElementById('panTool').addEventListener('click', () => selectTool('pan'));
+            document.getElementById('rulerTool').addEventListener('click', () => selectTool('ruler'));
+            document.getElementById('coneTool').addEventListener('click', () => selectTool('cone'));
+            document.getElementById('circleTool').addEventListener('click', () => selectTool('circle'));
+            document.getElementById('fogTool').addEventListener('click', () => selectTool('fog'));
+            document.getElementById('portalTool').addEventListener('click', () => selectTool('portal'));
+            
+            // Map Actions
+            document.getElementById('addTokens').addEventListener('click', () => {
+                document.getElementById('addTokenModal').classList.add('active');
+            });
+            document.getElementById('saveMap').addEventListener('click', saveMap);
+            document.getElementById('loadMap').addEventListener('click', loadMap);
+            document.getElementById('newMap').addEventListener('click', newMap);
+            
+            // Initiative
+            document.getElementById('startInitiative').addEventListener('click', startInitiative);
+            document.getElementById('endInitiative').addEventListener('click', endInitiative);
+            document.getElementById('nextTurn').addEventListener('click', nextTurn);
+            document.getElementById('showAddEnemy').addEventListener('click', () => {
+                const form = document.getElementById('addEnemyForm');
+                form.style.display = form.style.display === 'none' ? 'block' : 'none';
+            });
+            document.getElementById('addEnemy').addEventListener('click', addEnemy);
+            
+            // Chat
+            document.getElementById('sendChat').addEventListener('click', sendMessage);
+            document.getElementById('chatInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') sendMessage();
+            });
+            
+            // Character Sheet
+            document.getElementById('closeSheet').addEventListener('click', () => {
+                document.getElementById('characterSheet').classList.remove('active');
+            });
+            
+            // Token Modal
+            document.getElementById('confirmAddToken').addEventListener('click', confirmAddToken);
+            document.getElementById('cancelAddToken').addEventListener('click', () => {
+                document.getElementById('addTokenModal').classList.remove('active');
+            });
+            
+            // Map Canvas Events
+            gameState.mapCanvas.addEventListener('click', handleCanvasClick);
+            gameState.mapCanvas.addEventListener('mousedown', handleMouseDown);
+            document.addEventListener('mousemove', handleMouseMove);
+            document.addEventListener('mouseup', handleMouseUp);
+        }
+
+        function toggleView() {
+            gameState.isPlayerMode = !gameState.isPlayerMode;
+            const button = document.getElementById('viewToggle');
+            const container = document.getElementById('appContainer');
+            
+            if (gameState.isPlayerMode) {
+                button.textContent = 'Player View';
+                button.classList.add('player-mode');
+                container.classList.add('player-mode');
+            } else {
+                button.textContent = 'DM View';
+                button.classList.remove('player-mode');
+                container.classList.remove('player-mode');
+            }
+            
+            renderPartyList();
+            addMessage('System', `Switched to ${gameState.isPlayerMode ? 'Player' : 'DM'} view`, 'system');
+        }
+
+        function selectTool(tool) {
+            gameState.currentTool = tool;
+            document.querySelectorAll('.toolbar button').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(tool + 'Tool').classList.add('active');
+            addMessage('System', `${tool.charAt(0).toUpperCase() + tool.slice(1)} tool selected`, 'system');
+        }
+
+        function renderPartyList() {
+            const partyList = document.getElementById('partyList');
+            partyList.innerHTML = '';
+            
+            let members = [...gameState.party];
+            if (gameState.inCombat) {
+                members = [...gameState.party, ...gameState.enemies].sort((a, b) => b.initiative - a.initiative);
+            }
+            
+            members.forEach((member, index) => {
+                if (gameState.isPlayerMode && member.type === 'enemy') return;
+                
+                const memberEl = document.createElement('div');
+                memberEl.className = `party-member ${member.type}`;
+                if (gameState.inCombat && index === gameState.currentTurn) {
+                    memberEl.classList.add('current-turn');
+                }
+                
+                memberEl.innerHTML = `
+                    <img src="data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'><circle cx='30' cy='30' r='25' fill='${getAvatarColor(member.type)}'></circle><text x='30' y='35' text-anchor='middle' fill='white' font-size='20' font-family='Arial'>${member.name[0]}</text></svg>`)}" alt="${member.name}">
+                    <div class="name">${member.name}</div>
+                    ${gameState.inCombat ? `<div class="initiative">Init: ${member.initiative}</div>` : ''}
+                `;
+                
+                memberEl.addEventListener('click', () => {
+                    if (!gameState.isPlayerMode || member.type !== 'enemy') {
+                        showCharacterSheet(member);
+                    }
+                });
+                
+                partyList.appendChild(memberEl);
+            });
+        }
+
+        function getAvatarColor(type) {
+            switch (type) {
+                case 'pc': return '#4a90e2';
+                case 'npc': return '#f39c12';
+                case 'enemy': return '#e74c3c';
+                default: return '#666';
+            }
+        }
+
+        function showCharacterSheet(character) {
+            const sheet = document.getElementById('characterSheet');
+            const nameEl = document.getElementById('characterName');
+            const contentEl = document.getElementById('characterContent');
+            
+            nameEl.textContent = character.name;
+            
+            contentEl.innerHTML = `
+                <div class="stat-grid">
+                    <div class="stat-item">
+                        <div class="label">Hit Points</div>
+                        <div class="value">${character.hp || 100}</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="label">Armor Class</div>
+                        <div class="value">${character.ac || 15}</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="label">Initiative</div>
+                        <div class="value">${character.initiative}</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="label">Type</div>
+                        <div class="value">${character.type.toUpperCase()}</div>
+                    </div>
+                </div>
+                <div style="margin-top: 20px;">
+                    <h4 style="color: #4a90e2; margin-bottom: 10px;">Abilities</h4>
+                    <div class="stat-grid">
+                        <div class="stat-item"><div class="label">STR</div><div class="value">16</div></div>
+                        <div class="stat-item"><div class="label">DEX</div><div class="value">14</div></div>
+                        <div class="stat-item"><div class="label">CON</div><div class="value">15</div></div>
+                        <div class="stat-item"><div class="label">INT</div><div class="value">12</div></div>
+                        <div class="stat-item"><div class="label">WIS</div><div class="value">13</div></div>
+                        <div class="stat-item"><div class="label">CHA</div><div class="value">11</div></div>
+                    </div>
+                </div>
+            `;
+            
+            sheet.classList.add('active');
+        }
+
+        function startInitiative() {
+            gameState.inCombat = true;
+            gameState.currentTurn = 0;
+            
+            // Roll initiative for party
+            gameState.party.forEach(member => {
+                member.initiative = Math.floor(Math.random() * 20) + 1;
+            });
+            
+            // Roll initiative for enemies
+            gameState.enemies.forEach(enemy => {
+                if (!enemy.initiative) {
+                    enemy.initiative = Math.floor(Math.random() * 20) + 1;
+                }
+            });
+            
+            document.getElementById('initiativeControls').classList.add('active');
+            renderPartyList();
+            addMessage('System', 'Initiative started! Combat begins.', 'system');
+        }
+
+        function endInitiative() {
+            gameState.inCombat = false;
+            gameState.enemies = [];
+            gameState.currentTurn = 0;
+            
+            gameState.party.forEach(member => {
+                member.initiative = 0;
+            });
+            
+            document.getElementById('initiativeControls').classList.remove('active');
+            document.getElementById('addEnemyForm').style.display = 'none';
+            renderPartyList();
+            addMessage('System', 'Initiative ended. Combat concluded.', 'system');
+        }
+
+        function nextTurn() {
+            if (!gameState.inCombat) return;
+            
+            const totalCombatants = gameState.party.length + gameState.enemies.length;
+            gameState.currentTurn = (gameState.currentTurn + 1) % totalCombatants;
+            
+            renderPartyList();
+            
+            const allCombatants = [...gameState.party, ...gameState.enemies]
+                .sort((a, b) => b.initiative - a.initiative);
+            
+            const currentCharacter = allCombatants[gameState.currentTurn];
+            if (currentCharacter) {
+                addMessage('System', `${currentCharacter.name}'s turn!`, 'system');
+            }
+        }
+
+        function addEnemy() {
+            const name = document.getElementById('enemyName').value.trim();
+            const initiative = parseInt(document.getElementById('enemyInitiative').value) || 10;
+            
+            if (!name) {
+                addMessage('System', 'Please enter an enemy name', 'system');
+                return;
+            }
+            
+            const enemy = {
+                id: Date.now(),
+                name: name,
+                type: 'enemy',
+                initiative: initiative,
+                hp: 50,
+                ac: 15
+            };
+            
+            gameState.enemies.push(enemy);
+            addToken(Math.random() * 400 + 100, Math.random() * 300 + 100, name, 'enemy');
+            
+            document.getElementById('enemyName').value = '';
+            document.getElementById('enemyInitiative').value = '';
+            document.getElementById('addEnemyForm').style.display = 'none';
+            
+            renderPartyList();
+            addMessage('System', `${name} added to combat with initiative ${initiative}`, 'system');
+        }
+
+        function addToken(x, y, name, type) {
+            const token = document.createElement('div');
+            token.className = `token ${type}`;
+            token.style.left = x + 'px';
+            token.style.top = y + 'px';
+            token.textContent = name.substring(0, 2).toUpperCase();
+            token.dataset.name = name;
+            token.dataset.type = type;
+            token.dataset.id = Date.now();
+            
+            gameState.mapCanvas.appendChild(token);
+            gameState.tokens.push({ element: token, x, y, name, type });
+            
+            // Add drag functionality
+            token.addEventListener('mousedown', (e) => {
+                if (gameState.isPlayerMode && type === 'enemy') return;
+                gameState.selectedToken = token;
+                token.classList.add('selected');
+                gameState.isDragging = true;
+                
+                const rect = token.getBoundingClientRect();
+                const canvasRect = gameState.mapCanvas.getBoundingClientRect();
+                gameState.dragOffset = {
+                    x: e.clientX - rect.left,
+                    y: e.clientY - rect.top
+                };
+                
+                e.preventDefault();
+            });
+        }
+
+        function confirmAddToken() {
+            const name = document.getElementById('tokenName').value.trim();
+            const type = document.getElementById('tokenType').value;
+            
+            if (!name) {
+                addMessage('System', 'Please enter a token name', 'system');
+                return;
+            }
+            
+            const x = Math.random() * 400 + 100;
+            const y = Math.random() * 300 + 100;
+            
+            addToken(x, y, name, type);
+            
+            document.getElementById('tokenName').value = '';
+            document.getElementById('addTokenModal').classList.remove('active');
+            
+            addMessage('System', `${name} token added to map`, 'system');
+        }
+
+        function handleCanvasClick(e) {
+            if (gameState.currentTool === 'pan') return;
+            
+            const rect = gameState.mapCanvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            switch (gameState.currentTool) {
+                case 'fog':
+                    if (!gameState.isPlayerMode) {
+                        addFogArea(x, y);
+                    }
+                    break;
+                case 'cone':
+                    if (!gameState.isPlayerMode) {
+                        addConeOverlay(x, y);
+                    }
+                    break;
+                case 'circle':
+                    if (!gameState.isPlayerMode) {
+                        addCircleOverlay(x, y);
+                    }
+                    break;
+            }
+        }
+
+        function handleMouseDown(e) {
+            if (e.target.classList.contains('token')) return;
+            
+            // Clear token selection
+            document.querySelectorAll('.token').forEach(token => {
+                token.classList.remove('selected');
+            });
+            gameState.selectedToken = null;
+        }
+
+        function handleMouseMove(e) {
+            if (gameState.isDragging && gameState.selectedToken) {
+                const canvasRect = gameState.mapCanvas.getBoundingClientRect();
+                const x = e.clientX - canvasRect.left - gameState.dragOffset.x;
+                const y = e.clientY - canvasRect.top - gameState.dragOffset.y;
+                
+                gameState.selectedToken.style.left = Math.max(0, Math.min(x, canvasRect.width - 40)) + 'px';
+                gameState.selectedToken.style.top = Math.max(0, Math.min(y, canvasRect.height - 40)) + 'px';
+            }
+        }
+
+        function handleMouseUp(e) {
+            if (gameState.isDragging && gameState.selectedToken) {
+                gameState.isDragging = false;
+                addMessage('System', `${gameState.selectedToken.dataset.name} moved`, 'system');
+            }
+        }
+
+        function addFogArea(x, y) {
+            const fog = document.createElement('div');
+            fog.className = 'fog-overlay';
+            fog.style.left = (x - 50) + 'px';
+            fog.style.top = (y - 50) + 'px';
+            fog.style.width = '100px';
+            fog.style.height = '100px';
+            
+            fog.addEventListener('click', () => {
+                if (!gameState.isPlayerMode) {
+                    fog.remove();
+                    addMessage('System', 'Fog area removed', 'system');
+                }
+            });
+            
+            gameState.mapCanvas.appendChild(fog);
+            addMessage('System', 'Fog of war added', 'system');
+        }
+
+        function addConeOverlay(x, y) {
+            const cone = document.createElement('div');
+            cone.style.position = 'absolute';
+            cone.style.left = (x - 30) + 'px';
+            cone.style.top = (y - 30) + 'px';
+            cone.style.width = '0';
+            cone.style.height = '0';
+            cone.style.borderLeft = '30px solid transparent';
+            cone.style.borderRight = '30px solid transparent';
+            cone.style.borderBottom = '60px solid rgba(255, 0, 0, 0.3)';
+            cone.style.pointerEvents = 'none';
+            
+            gameState.mapCanvas.appendChild(cone);
+            setTimeout(() => cone.remove(), 3000);
+            addMessage('System', 'Cone template placed', 'system');
+        }
+
+        function addCircleOverlay(x, y) {
+            const circle = document.createElement('div');
+            circle.style.position = 'absolute';
+            circle.style.left = (x - 40) + 'px';
+            circle.style.top = (y - 40) + 'px';
+            circle.style.width = '80px';
+            circle.style.height = '80px';
+            circle.style.borderRadius = '50%';
+            circle.style.border = '2px solid rgba(0, 255, 0, 0.6)';
+            circle.style.background = 'rgba(0, 255, 0, 0.1)';
+            circle.style.pointerEvents = 'none';
+            
+            gameState.mapCanvas.appendChild(circle);
+            setTimeout(() => circle.remove(), 3000);
+            addMessage('System', 'Circle template placed', 'system');
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            
+            if (message) {
+                addMessage('Player', message);
+                input.value = '';
+                
+                // Simple command processing
+                if (message.startsWith('/roll ')) {
+                    const diceNotation = message.substring(6);
+                    rollDice(diceNotation);
+                }
+            }
+        }
+
+        function addMessage(sender, message, type = 'player') {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageEl = document.createElement('div');
+            messageEl.className = `chat-message ${type}`;
+            messageEl.innerHTML = `<strong>${sender}:</strong> ${message}`;
+            
+            chatMessages.appendChild(messageEl);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function rollDice(notation) {
+            const match = notation.match(/(\d+)?d(\d+)(\+\d+)?/);
+            if (!match) return;
+            
+            const count = parseInt(match[1]) || 1;
+            const sides = parseInt(match[2]);
+            const modifier = parseInt(match[3]) || 0;
+            
+            let total = 0;
+            const rolls = [];
+            
+            for (let i = 0; i < count; i++) {
+                const roll = Math.floor(Math.random() * sides) + 1;
+                rolls.push(roll);
+                total += roll;
+            }
+            
+            total += modifier;
+            
+            const result = `Rolled ${notation}: ${rolls.join(', ')}${modifier ? ` + ${modifier}` : ''} = ${total}`;
+            addMessage('Dice', result, 'dice');
+        }
+
+        function saveMap() {
+            const mapData = {
+                tokens: gameState.tokens.map(token => ({
+                    x: parseInt(token.element.style.left),
+                    y: parseInt(token.element.style.top),
+                    name: token.name,
+                    type: token.type
+                })),
+                party: gameState.party,
+                timestamp: new Date().toISOString()
+            };
+            
+            // In a real app, this would save to a server or local storage
+            console.log('Map saved:', mapData);
+            addMessage('System', 'Map saved successfully!', 'system');
+        }
+
+        function loadMap() {
+            // In a real app, this would load from a server or file
+            addMessage('System', 'Map loading functionality would be implemented here', 'system');
+        }
+
+        function newMap() {
+            // Clear existing tokens
+            gameState.tokens.forEach(token => token.element.remove());
+            gameState.tokens = [];
+            
+            // Clear fog overlays
+            document.querySelectorAll('.fog-overlay').forEach(fog => fog.remove());
+            
+            // Reset combat state
+            if (gameState.inCombat) {
+                endInitiative();
+            }
+            
+            addMessage('System', 'New map created. Canvas cleared.', 'system');
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT') return;
+            
+            switch (e.key) {
+                case '1':
+                    selectTool('pan');
+                    break;
+                case '2':
+                    selectTool('ruler');
+                    break;
+                case '3':
+                    selectTool('fog');
+                    break;
+                case ' ':
+                    if (gameState.inCombat) {
+                        e.preventDefault();
+                        nextTurn();
+                    }
+                    break;
+                case 'Escape':
+                    document.getElementById('characterSheet').classList.remove('active');
+                    document.getElementById('addTokenModal').classList.remove('active');
+                    break;
+            }
+        });
+
+        // Touch support for mobile
+        let touchStartX, touchStartY;
+        
+        gameState.mapCanvas.addEventListener('touchstart', (e) => {
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+        });
+        
+        gameState.mapCanvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+        });
+        
+        gameState.mapCanvas.addEventListener('touchend', (e) => {
+            const touchEndX = e.changedTouches[0].clientX;
+            const touchEndY = e.changedTouches[0].clientY;
+            
+            // If it's a tap (not a swipe), treat it as a click
+            if (Math.abs(touchEndX - touchStartX) < 10 && Math.abs(touchEndY - touchStartY) < 10) {
+                const rect = gameState.mapCanvas.getBoundingClientRect();
+                const x = touchEndX - rect.left;
+                const y = touchEndY - rect.top;
+                
+                handleCanvasClick({ clientX: touchEndX, clientY: touchEndY });
+            }
+        });
+
+        // Auto-save functionality
+        setInterval(() => {
+            if (gameState.tokens.length > 0) {
+                // Auto-save logic would go here
+                console.log('Auto-saving game state...');
+            }
+        }, 30000); // Auto-save every 30 seconds
+    </script>
+</body>
+</html>
