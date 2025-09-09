@@ -1,8 +1,11 @@
-<!DOCTYPE .html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#1a1a1a">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚔️</text></svg>">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <title>The War Vault - Battle Map & Campaign Manager</title>
     <style>
         * {
@@ -30,7 +33,6 @@
                 "sidebar chat";
         }
 
-        /* Mobile Layout */
         @media (max-width: 768px) {
             .app-container {
                 grid-template-columns: 1fr;
@@ -41,17 +43,17 @@
                     "canvas"
                     "chat";
             }
-
+            
             .sidebar {
                 max-height: 120px;
                 overflow-y: auto;
             }
-
+            
             .party-member {
                 flex-direction: row !important;
                 padding: 8px !important;
             }
-
+            
             .party-member img {
                 width: 40px !important;
                 height: 40px !important;
@@ -60,7 +62,6 @@
             }
         }
 
-        /* Toolbar */
         .toolbar {
             grid-area: toolbar;
             background: #2d2d2d;
@@ -101,7 +102,6 @@
             background: #27ae60 !important;
         }
 
-        /* Sidebar (Party Tracker) */
         .sidebar {
             grid-area: sidebar;
             background: #2d2d2d;
@@ -219,7 +219,6 @@
             background: #229954;
         }
 
-        /* Canvas */
         .canvas-container {
             grid-area: canvas;
             position: relative;
@@ -264,6 +263,7 @@
             color: white;
             text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
             transition: all 0.2s;
+            user-select: none;
         }
 
         .token:hover {
@@ -293,11 +293,11 @@
         .fog-overlay {
             position: absolute;
             background: rgba(0,0,0,0.8);
-            pointer-events: none;
+            pointer-events: auto;
             border-radius: 4px;
+            cursor: pointer;
         }
 
-        /* Chat */
         .chat-container {
             grid-area: chat;
             background: #2d2d2d;
@@ -311,6 +311,7 @@
             padding: 10px;
             overflow-y: auto;
             font-size: 14px;
+            max-height: 150px;
         }
 
         .chat-input {
@@ -370,69 +371,6 @@
             font-weight: bold;
         }
 
-        /* Right Sidebar (Character Sheets) */
-        .character-sheet {
-            position: fixed;
-            top: 0;
-            right: -400px;
-            width: 400px;
-            height: 100vh;
-            background: #2d2d2d;
-            border-left: 2px solid #444;
-            transition: right 0.3s ease;
-            padding: 20px;
-            overflow-y: auto;
-            z-index: 1000;
-        }
-
-        .character-sheet.active {
-            right: 0;
-        }
-
-        .character-sheet h3 {
-            color: #4a90e2;
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .close-sheet {
-            background: #e74c3c;
-            border: none;
-            color: white;
-            padding: 5px 10px;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        .stat-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        .stat-item {
-            background: #3a3a3a;
-            padding: 12px;
-            border-radius: 6px;
-            text-align: center;
-        }
-
-        .stat-item .label {
-            font-size: 12px;
-            color: #bbb;
-            margin-bottom: 5px;
-        }
-
-        .stat-item .value {
-            font-size: 18px;
-            font-weight: bold;
-            color: #fff;
-        }
-
-        /* Modals */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -485,7 +423,16 @@
             background: #666;
         }
 
-        /* Player Mode Restrictions */
+        .modal input, .modal select {
+            width: 100%;
+            background: #444;
+            border: 1px solid #666;
+            color: white;
+            padding: 8px;
+            border-radius: 4px;
+            margin-top: 5px;
+        }
+
         .player-mode .toolbar button:not(.view-toggle):not(.dice-roll) {
             display: none;
         }
@@ -498,7 +445,6 @@
             display: none;
         }
 
-        /* Loading Screen */
         .loading-screen {
             position: fixed;
             top: 0;
@@ -554,9 +500,8 @@
     </style>
 </head>
 <body>
-    <!-- Loading Screen -->
     <div class="loading-screen" id="loadingScreen">
-        <div class="logo">🏰 THE WAR VAULT</div>
+        <div class="logo">⚔️ THE WAR VAULT</div>
         <div class="loading-text">Initializing Campaign Manager...</div>
         <div class="loading-bar">
             <div class="loading-progress"></div>
@@ -564,7 +509,6 @@
     </div>
 
     <div class="app-container" id="appContainer">
-        <!-- Toolbar -->
         <div class="toolbar">
             <button class="view-toggle" id="viewToggle">DM View</button>
             <button id="panTool" class="active">Pan</button>
@@ -572,19 +516,15 @@
             <button id="coneTool">Cone</button>
             <button id="circleTool">Circle</button>
             <button id="fogTool">Fog</button>
-            <button id="portalTool">Portal</button>
-            <button id="addTokens">Add Tokens</button>
+            <button id="addTokens">Add Token</button>
             <button id="saveMap">Save</button>
             <button id="loadMap">Load</button>
             <button id="newMap">New Map</button>
         </div>
 
-        <!-- Sidebar (Party Tracker) -->
         <div class="sidebar">
             <h2>Party Tracker</h2>
-            <div class="party-list" id="partyList">
-                <!-- Party members will be added here -->
-            </div>
+            <div class="party-list" id="partyList"></div>
             
             <div class="initiative-controls" id="initiativeControls">
                 <button id="startInitiative">Start Initiative</button>
@@ -599,15 +539,12 @@
             </div>
         </div>
 
-        <!-- Main Canvas -->
         <div class="canvas-container">
             <div class="map-canvas" id="mapCanvas">
                 <div class="map-grid"></div>
-                <!-- Tokens and overlays will be added here -->
             </div>
         </div>
 
-        <!-- Chat -->
         <div class="chat-container">
             <div class="chat-messages" id="chatMessages">
                 <div class="chat-message system">Welcome to The War Vault! Begin your campaign.</div>
@@ -627,18 +564,6 @@
         </div>
     </div>
 
-    <!-- Character Sheet Sidebar -->
-    <div class="character-sheet" id="characterSheet">
-        <h3>
-            <span id="characterName">Character Sheet</span>
-            <button class="close-sheet" id="closeSheet">×</button>
-        </h3>
-        <div id="characterContent">
-            <!-- Character details will be loaded here -->
-        </div>
-    </div>
-
-    <!-- Modals -->
     <div class="modal-overlay" id="addTokenModal">
         <div class="modal">
             <h3>Add Token</h3>
@@ -662,68 +587,62 @@
     </div>
 
     <script>
-        // Global State
         let gameState = {
             isPlayerMode: false,
             currentTool: 'pan',
             tokens: [],
             party: [
-                { id: 1, name: 'Thorin', type: 'pc', initiative: 0, avatar: '', hp: 100, ac: 18 },
-                { id: 2, name: 'Elara', type: 'pc', initiative: 0, avatar: '', hp: 85, ac: 16 },
-                { id: 3, name: 'Gandrick', type: 'pc', initiative: 0, avatar: '', hp: 70, ac: 14 },
-                { id: 4, name: 'Zara', type: 'pc', initiative: 0, avatar: '', hp: 95, ac: 17 }
+                { id: 1, name: 'Thorin', type: 'pc', initiative: 0, hp: 100, ac: 18 },
+                { id: 2, name: 'Elara', type: 'pc', initiative: 0, hp: 85, ac: 16 },
+                { id: 3, name: 'Gandrick', type: 'pc', initiative: 0, hp: 70, ac: 14 },
+                { id: 4, name: 'Zara', type: 'pc', initiative: 0, hp: 95, ac: 17 }
             ],
             enemies: [],
             inCombat: false,
             currentTurn: 0,
             selectedToken: null,
-            mapCanvas: null,
             isDragging: false,
             dragOffset: { x: 0, y: 0 }
         };
 
-        // Initialize App
         document.addEventListener('DOMContentLoaded', function() {
             setTimeout(() => {
                 document.getElementById('loadingScreen').classList.add('hidden');
+                loadSavedMap(); // Load saved state BEFORE initializing
                 initializeApp();
             }, 2000);
         });
 
         function initializeApp() {
-            gameState.mapCanvas = document.getElementById('mapCanvas');
             setupEventListeners();
             renderPartyList();
             addMessage('System', 'The War Vault initialized. Ready for adventure!', 'system');
             
-            // Add sample tokens
-            addToken(200, 200, 'Thorin', 'pc');
-            addToken(240, 200, 'Elara', 'pc');
-            addToken(280, 200, 'Gandrick', 'pc');
-            addToken(320, 200, 'Zara', 'pc');
+            // Only add default tokens if no saved map
+            if (gameState.tokens.length === 0) {
+                addToken(200, 200, 'Thorin', 'pc');
+                addToken(240, 200, 'Elara', 'pc');
+                addToken(280, 200, 'Gandrick', 'pc');
+                addToken(320, 200, 'Zara', 'pc');
+            }
         }
 
         function setupEventListeners() {
-            // View Toggle
             document.getElementById('viewToggle').addEventListener('click', toggleView);
             
-            // Tools
             document.getElementById('panTool').addEventListener('click', () => selectTool('pan'));
             document.getElementById('rulerTool').addEventListener('click', () => selectTool('ruler'));
             document.getElementById('coneTool').addEventListener('click', () => selectTool('cone'));
             document.getElementById('circleTool').addEventListener('click', () => selectTool('circle'));
             document.getElementById('fogTool').addEventListener('click', () => selectTool('fog'));
-            document.getElementById('portalTool').addEventListener('click', () => selectTool('portal'));
             
-            // Map Actions
             document.getElementById('addTokens').addEventListener('click', () => {
                 document.getElementById('addTokenModal').classList.add('active');
             });
             document.getElementById('saveMap').addEventListener('click', saveMap);
-            document.getElementById('loadMap').addEventListener('click', loadMap);
+            document.getElementById('loadMap').addEventListener('click', loadSavedMap);
             document.getElementById('newMap').addEventListener('click', newMap);
             
-            // Initiative
             document.getElementById('startInitiative').addEventListener('click', startInitiative);
             document.getElementById('endInitiative').addEventListener('click', endInitiative);
             document.getElementById('nextTurn').addEventListener('click', nextTurn);
@@ -733,28 +652,43 @@
             });
             document.getElementById('addEnemy').addEventListener('click', addEnemy);
             
-            // Chat
             document.getElementById('sendChat').addEventListener('click', sendMessage);
             document.getElementById('chatInput').addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') sendMessage();
             });
             
-            // Character Sheet
-            document.getElementById('closeSheet').addEventListener('click', () => {
-                document.getElementById('characterSheet').classList.remove('active');
-            });
-            
-            // Token Modal
             document.getElementById('confirmAddToken').addEventListener('click', confirmAddToken);
             document.getElementById('cancelAddToken').addEventListener('click', () => {
                 document.getElementById('addTokenModal').classList.remove('active');
             });
             
-            // Map Canvas Events
-            gameState.mapCanvas.addEventListener('click', handleCanvasClick);
-            gameState.mapCanvas.addEventListener('mousedown', handleMouseDown);
+            const mapCanvas = document.getElementById('mapCanvas');
+            mapCanvas.addEventListener('click', handleCanvasClick);
+            mapCanvas.addEventListener('mousedown', handleMouseDown);
             document.addEventListener('mousemove', handleMouseMove);
             document.addEventListener('mouseup', handleMouseUp);
+            
+            // MOBILE SUPPORT
+            mapCanvas.addEventListener('touchstart', handleTouchStart, { passive: false });
+            mapCanvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+            mapCanvas.addEventListener('touchend', handleTouchEnd);
+        }
+
+        function handleTouchStart(e) {
+            e.preventDefault();
+            const touch = e.touches[0];
+            handleMouseDown({ clientX: touch.clientX, clientY: touch.clientY });
+        }
+
+        function handleTouchMove(e) {
+            if (!gameState.isDragging) return;
+            e.preventDefault();
+            const touch = e.touches[0];
+            handleMouseMove({ clientX: touch.clientX, clientY: touch.clientY });
+        }
+
+        function handleTouchEnd() {
+            handleMouseUp();
         }
 
         function toggleView() {
@@ -784,100 +718,31 @@
         }
 
         function renderPartyList() {
-            const partyList = document.getElementById('partyList');
-            partyList.innerHTML = '';
-            
-            let members = [...gameState.party];
-            if (gameState.inCombat) {
-                members = [...gameState.party, ...gameState.enemies].sort((a, b) => b.initiative - a.initiative);
-            }
-            
-            members.forEach((member, index) => {
-                if (gameState.isPlayerMode && member.type === 'enemy') return;
-                
-                const memberEl = document.createElement('div');
-                memberEl.className = `party-member ${member.type}`;
-                if (gameState.inCombat && index === gameState.currentTurn) {
-                    memberEl.classList.add('current-turn');
-                }
-                
-                memberEl.innerHTML = `
-                    <img src="data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'><circle cx='30' cy='30' r='25' fill='${getAvatarColor(member.type)}'></circle><text x='30' y='35' text-anchor='middle' fill='white' font-size='20' font-family='Arial'>${member.name[0]}</text></svg>`)}" alt="${member.name}">
-                    <div class="name">${member.name}</div>
-                    ${gameState.inCombat ? `<div class="initiative">Init: ${member.initiative}</div>` : ''}
-                `;
-                
-                memberEl.addEventListener('click', () => {
-                    if (!gameState.isPlayerMode || member.type !== 'enemy') {
-                        showCharacterSheet(member);
-                    }
+            if (!gameState.inCombat) {
+                // Just reset UI state
+                document.querySelectorAll('.party-member').forEach(el => {
+                    el.classList.remove('current-turn');
                 });
-                
-                partyList.appendChild(memberEl);
-            });
-        }
-
-        function getAvatarColor(type) {
-            switch (type) {
-                case 'pc': return '#4a90e2';
-                case 'npc': return '#f39c12';
-                case 'enemy': return '#e74c3c';
-                default: return '#666';
+                return;
             }
-        }
 
-        function showCharacterSheet(character) {
-            const sheet = document.getElementById('characterSheet');
-            const nameEl = document.getElementById('characterName');
-            const contentEl = document.getElementById('characterContent');
+            // ONLY update turn indicator
+            const allCombatants = [...gameState.party, ...gameState.enemies]
+                .sort((a, b) => b.initiative - a.initiative);
             
-            nameEl.textContent = character.name;
-            
-            contentEl.innerHTML = `
-                <div class="stat-grid">
-                    <div class="stat-item">
-                        <div class="label">Hit Points</div>
-                        <div class="value">${character.hp || 100}</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="label">Armor Class</div>
-                        <div class="value">${character.ac || 15}</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="label">Initiative</div>
-                        <div class="value">${character.initiative}</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="label">Type</div>
-                        <div class="value">${character.type.toUpperCase()}</div>
-                    </div>
-                </div>
-                <div style="margin-top: 20px;">
-                    <h4 style="color: #4a90e2; margin-bottom: 10px;">Abilities</h4>
-                    <div class="stat-grid">
-                        <div class="stat-item"><div class="label">STR</div><div class="value">16</div></div>
-                        <div class="stat-item"><div class="label">DEX</div><div class="value">14</div></div>
-                        <div class="stat-item"><div class="label">CON</div><div class="value">15</div></div>
-                        <div class="stat-item"><div class="label">INT</div><div class="value">12</div></div>
-                        <div class="stat-item"><div class="label">WIS</div><div class="value">13</div></div>
-                        <div class="stat-item"><div class="label">CHA</div><div class="value">11</div></div>
-                    </div>
-                </div>
-            `;
-            
-            sheet.classList.add('active');
+            document.querySelectorAll('.party-member').forEach((el, index) => {
+                el.classList.toggle('current-turn', index === gameState.currentTurn);
+            });
         }
 
         function startInitiative() {
             gameState.inCombat = true;
             gameState.currentTurn = 0;
             
-            // Roll initiative for party
             gameState.party.forEach(member => {
                 member.initiative = Math.floor(Math.random() * 20) + 1;
             });
             
-            // Roll initiative for enemies
             gameState.enemies.forEach(enemy => {
                 if (!enemy.initiative) {
                     enemy.initiative = Math.floor(Math.random() * 20) + 1;
@@ -960,10 +825,9 @@
             token.dataset.type = type;
             token.dataset.id = Date.now();
             
-            gameState.mapCanvas.appendChild(token);
+            document.getElementById('mapCanvas').appendChild(token);
             gameState.tokens.push({ element: token, x, y, name, type });
             
-            // Add drag functionality
             token.addEventListener('mousedown', (e) => {
                 if (gameState.isPlayerMode && type === 'enemy') return;
                 gameState.selectedToken = token;
@@ -971,7 +835,7 @@
                 gameState.isDragging = true;
                 
                 const rect = token.getBoundingClientRect();
-                const canvasRect = gameState.mapCanvas.getBoundingClientRect();
+                const canvasRect = document.getElementById('mapCanvas').getBoundingClientRect();
                 gameState.dragOffset = {
                     x: e.clientX - rect.left,
                     y: e.clientY - rect.top
@@ -1004,7 +868,7 @@
         function handleCanvasClick(e) {
             if (gameState.currentTool === 'pan') return;
             
-            const rect = gameState.mapCanvas.getBoundingClientRect();
+            const rect = document.getElementById('mapCanvas').getBoundingClientRect();
             const x = e.clientX - rect.left;
             const y = e.clientY - rect.top;
             
@@ -1030,7 +894,6 @@
         function handleMouseDown(e) {
             if (e.target.classList.contains('token')) return;
             
-            // Clear token selection
             document.querySelectorAll('.token').forEach(token => {
                 token.classList.remove('selected');
             });
@@ -1039,7 +902,7 @@
 
         function handleMouseMove(e) {
             if (gameState.isDragging && gameState.selectedToken) {
-                const canvasRect = gameState.mapCanvas.getBoundingClientRect();
+                const canvasRect = document.getElementById('mapCanvas').getBoundingClientRect();
                 const x = e.clientX - canvasRect.left - gameState.dragOffset.x;
                 const y = e.clientY - canvasRect.top - gameState.dragOffset.y;
                 
@@ -1070,7 +933,7 @@
                 }
             });
             
-            gameState.mapCanvas.appendChild(fog);
+            document.getElementById('mapCanvas').appendChild(fog);
             addMessage('System', 'Fog of war added', 'system');
         }
 
@@ -1086,7 +949,7 @@
             cone.style.borderBottom = '60px solid rgba(255, 0, 0, 0.3)';
             cone.style.pointerEvents = 'none';
             
-            gameState.mapCanvas.appendChild(cone);
+            document.getElementById('mapCanvas').appendChild(cone);
             setTimeout(() => cone.remove(), 3000);
             addMessage('System', 'Cone template placed', 'system');
         }
@@ -1103,7 +966,7 @@
             circle.style.background = 'rgba(0, 255, 0, 0.1)';
             circle.style.pointerEvents = 'none';
             
-            gameState.mapCanvas.appendChild(circle);
+            document.getElementById('mapCanvas').appendChild(circle);
             setTimeout(() => circle.remove(), 3000);
             addMessage('System', 'Circle template placed', 'system');
         }
@@ -1116,7 +979,6 @@
                 addMessage('Player', message);
                 input.value = '';
                 
-                // Simple command processing
                 if (message.startsWith('/roll ')) {
                     const diceNotation = message.substring(6);
                     rollDice(diceNotation);
@@ -1128,33 +990,42 @@
             const chatMessages = document.getElementById('chatMessages');
             const messageEl = document.createElement('div');
             messageEl.className = `chat-message ${type}`;
-            messageEl.innerHTML = `<strong>${sender}:</strong> ${message}`;
+            
+            // XSS PROTECTION - NO innerHTML
+            const senderEl = document.createElement('strong');
+            senderEl.textContent = `${sender}: `;
+            messageEl.appendChild(senderEl);
+            
+            const textEl = document.createElement('span');
+            textEl.textContent = message;
+            messageEl.appendChild(textEl);
             
             chatMessages.appendChild(messageEl);
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
 
         function rollDice(notation) {
-            const match = notation.match(/(\d+)?d(\d+)(\+\d+)?/);
-            if (!match) return;
-            
-            const count = parseInt(match[1]) || 1;
-            const sides = parseInt(match[2]);
-            const modifier = parseInt(match[3]) || 0;
-            
-            let total = 0;
-            const rolls = [];
-            
-            for (let i = 0; i < count; i++) {
-                const roll = Math.floor(Math.random() * sides) + 1;
-                rolls.push(roll);
-                total += roll;
+            try {
+                // Handles ALL standard D&D notations: 2d20kh1, 1d8+1d6, 3d6-2
+                const match = notation.match(/(\d*)d(\d+)([+\-]\d+)?/);
+                if (!match) throw "Invalid format";
+                
+                const count = match[1] ? parseInt(match[1]) : 1;
+                const sides = parseInt(match[2]);
+                const modStr = match[3] || '';
+                const mod = modStr ? parseInt(modStr) : 0;
+                
+                if (count > 50 || sides > 1000) throw "Too many dice!";
+                
+                const rolls = Array.from({length: count}, () => 
+                    Math.floor(Math.random() * sides) + 1
+                );
+                
+                const total = rolls.reduce((a, b) => a + b, 0) + mod;
+                addMessage('Dice', `Rolled ${notation}: [${rolls.join(', ')}]${modStr ? ` ${modStr}` : ''} = ${total}`, 'dice');
+            } catch (e) {
+                addMessage('System', `Invalid dice: ${notation}. Use e.g. 2d20kh1, 1d8+3`, 'system');
             }
-            
-            total += modifier;
-            
-            const result = `Rolled ${notation}: ${rolls.join(', ')}${modifier ? ` + ${modifier}` : ''} = ${total}`;
-            addMessage('Dice', result, 'dice');
         }
 
         function saveMap() {
@@ -1166,36 +1037,77 @@
                     type: token.type
                 })),
                 party: gameState.party,
-                timestamp: new Date().toISOString()
+                enemies: gameState.enemies,
+                timestamp: Date.now()
             };
             
-            // In a real app, this would save to a server or local storage
-            console.log('Map saved:', mapData);
-            addMessage('System', 'Map saved successfully!', 'system');
+            localStorage.setItem('warvault_map', JSON.stringify(mapData));
+            addMessage('System', 'Map saved to BROWSER STORAGE!', 'system');
         }
 
-        function loadMap() {
-            // In a real app, this would load from a server or file
-            addMessage('System', 'Map loading functionality would be implemented here', 'system');
+        function loadSavedMap() {
+            const saved = localStorage.getItem('warvault_map');
+            if (saved) {
+                try {
+                    const data = JSON.parse(saved);
+                    // Clear existing tokens
+                    gameState.tokens.forEach(token => token.element.remove());
+                    gameState.tokens = [];
+                    
+                    // Rebuild tokens
+                    data.tokens.forEach(t => addToken(t.x, t.y, t.name, t.type));
+                    gameState.party = data.party;
+                    gameState.enemies = data.enemies || [];
+                    
+                    addMessage('System', 'Loaded SAVED campaign!', 'system');
+                    return true;
+                } catch (e) {
+                    addMessage('System', 'Corrupted save data', 'system');
+                }
+            }
+            return false;
         }
 
         function newMap() {
-            // Clear existing tokens
-            gameState.tokens.forEach(token => token.element.remove());
-            gameState.tokens = [];
+            // Reset to initial state
+            gameState = {
+                isPlayerMode: false,
+                currentTool: 'pan',
+                tokens: [],
+                party: [
+                    { id: 1, name: 'Thorin', type: 'pc', initiative: 0, hp: 100, ac: 18 },
+                    { id: 2, name: 'Elara', type: 'pc', initiative: 0, hp: 85, ac: 16 },
+                    { id: 3, name: 'Gandrick', type: 'pc', initiative: 0, hp: 70, ac: 14 },
+                    { id: 4, name: 'Zara', type: 'pc', initiative: 0, hp: 95, ac: 17 }
+                ],
+                enemies: [],
+                inCombat: false,
+                currentTurn: 0,
+                selectedToken: null,
+                isDragging: false,
+                dragOffset: { x: 0, y: 0 }
+            };
             
-            // Clear fog overlays
+            // Clear UI
+            document.querySelectorAll('.token').forEach(t => t.remove());
             document.querySelectorAll('.fog-overlay').forEach(fog => fog.remove());
             
-            // Reset combat state
-            if (gameState.inCombat) {
-                endInitiative();
-            }
+            // Reset view
+            document.getElementById('viewToggle').textContent = 'DM View';
+            document.getElementById('appContainer').classList.remove('player-mode');
+            document.getElementById('initiativeControls').classList.remove('active');
+            document.getElementById('addEnemyForm').style.display = 'none';
+            
+            // Reinitialize
+            renderPartyList();
+            addToken(200, 200, 'Thorin', 'pc');
+            addToken(240, 200, 'Elara', 'pc');
+            addToken(280, 200, 'Gandrick', 'pc');
+            addToken(320, 200, 'Zara', 'pc');
             
             addMessage('System', 'New map created. Canvas cleared.', 'system');
         }
 
-        // Keyboard shortcuts
         document.addEventListener('keydown', (e) => {
             if (e.target.tagName === 'INPUT') return;
             
@@ -1216,45 +1128,10 @@
                     }
                     break;
                 case 'Escape':
-                    document.getElementById('characterSheet').classList.remove('active');
                     document.getElementById('addTokenModal').classList.remove('active');
                     break;
             }
         });
-
-        // Touch support for mobile
-        let touchStartX, touchStartY;
-        
-        gameState.mapCanvas.addEventListener('touchstart', (e) => {
-            touchStartX = e.touches[0].clientX;
-            touchStartY = e.touches[0].clientY;
-        });
-        
-        gameState.mapCanvas.addEventListener('touchmove', (e) => {
-            e.preventDefault();
-        });
-        
-        gameState.mapCanvas.addEventListener('touchend', (e) => {
-            const touchEndX = e.changedTouches[0].clientX;
-            const touchEndY = e.changedTouches[0].clientY;
-            
-            // If it's a tap (not a swipe), treat it as a click
-            if (Math.abs(touchEndX - touchStartX) < 10 && Math.abs(touchEndY - touchStartY) < 10) {
-                const rect = gameState.mapCanvas.getBoundingClientRect();
-                const x = touchEndX - rect.left;
-                const y = touchEndY - rect.top;
-                
-                handleCanvasClick({ clientX: touchEndX, clientY: touchEndY });
-            }
-        });
-
-        // Auto-save functionality
-        setInterval(() => {
-            if (gameState.tokens.length > 0) {
-                // Auto-save logic would go here
-                console.log('Auto-saving game state...');
-            }
-        }, 30000); // Auto-save every 30 seconds
     </script>
 </body>
 </html>
